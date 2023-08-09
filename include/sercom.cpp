@@ -50,6 +50,8 @@ sercom::sercom(char type, uint8_t clk_port, uint8_t data_port) {
             this->countStart = 0;
             this->isSended = 0;
             this->isMemset = 0;
+            this->dataId = 0;
+            this->parity = 0;
         }
     } else {
         Serial.println("Error: Wrong type of sercom");
@@ -401,10 +403,28 @@ void sercom::SSwait(){
             }
             else this->StateMachine = 0;            
         }
-
     }
     else {
         this->isInterrupt = false;
+        Serial.println("Error: Wrong type of sercom");
+    }
+}
+
+void sercom::receiveData(){
+    if (this->state == 0) {
+        DDRB |= (1 << DDB1);
+        if (this->countStart<9){
+            this->MESS |= (PINB & (1 << PINB1))<<this->countStart;
+            if(PINB & (1 << PINB1)){
+                this->parity = !this->parity;
+            }
+            if (this->countStart==7){
+                this->memory[this->dataId] = this->MESS;
+            }
+        }
+        this->countStart++;
+    }
+    else {
         Serial.println("Error: Wrong type of sercom");
     }
 }
