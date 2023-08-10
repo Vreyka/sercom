@@ -25,13 +25,13 @@ class sercom {
         uint8_t CLP;
         uint8_t DTP;
         volatile bool isSending, isReceiving;
-        char memory[100];
+        volatile char memory[100];
         char *data;
         volatile uint8_t DataToSend;
         volatile uint8_t dataId, charId;
         volatile bool parity;
-        uint8_t portclk;
-        uint8_t portdata;
+        volatile uint8_t *portclk;
+        volatile uint8_t *portdata;
         uint8_t clkpin;
         uint8_t datapin;
         static sercom* instancePtr;
@@ -66,7 +66,8 @@ class sercom {
         static void MRcall();
 
         //slave func
-        static void Scall();
+        static void Scall_p();
+        static void Scall_n();
 
         void Swait();
         void SSwait();
@@ -76,6 +77,7 @@ class sercom {
         void DataCallBack();
         void receiveData();
         void datamemset();
+        void receive();
 
 
 };
