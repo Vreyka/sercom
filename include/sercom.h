@@ -19,24 +19,26 @@ class sercom {
     private:
         ChaCha chacha;
         int8_t state;
-        volatile uint8_t StateMachine;
     public:
+        volatile uint8_t StateMachine;
+    
         // int8_t state;
         uint8_t CLP;
         uint8_t DTP;
+        volatile bool lastCLK;
         volatile bool isSending, isReceiving;
         volatile char memory[100];
         char *data;
         volatile uint8_t DataToSend;
         volatile uint8_t dataId, charId;
         volatile bool parity;
-        volatile uint8_t *portclk;
-        volatile uint8_t *portdata;
-        uint8_t clkpin;
-        uint8_t datapin;
+        // volatile uint8_t *portclk;
+        // volatile uint8_t *portdata;
+        // uint8_t clkpin;
+        // uint8_t datapin;
         static sercom* instancePtr;
         volatile bool isRecived, isNoERROR, isStarted, isSended;
-        volatile bool isMemset, isInterrupt;
+        volatile bool isMemset, isInterrupt, itp2;
         
         volatile uint8_t countStart;
         volatile bool nextChar;
@@ -64,6 +66,7 @@ class sercom {
 
         static void Mcall();
         static void MRcall();
+        static void switchIRS();
 
         //slave func
         static void Scall_p();

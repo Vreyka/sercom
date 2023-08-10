@@ -9,3 +9,9 @@ in the development cycle.
 
 More information about PlatformIO Unit Testing:
 - https://docs.platformio.org/en/latest/advanced/unit-testing/index.html
+
+
+C:\Users\AN\.platformio\penv\Scripts\platformio.exe run
+C:\Users\AN\.platformio\penv\Scripts\platformio.exe run --target upload
+C:\Users\AN\.platformio\penv\Scripts\platformio.exe device monitor --port COM5
+C:\Users\AN\.platformio\penv\Scripts\platformio.exe run --target clean 

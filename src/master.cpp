@@ -14,14 +14,25 @@ char mode = 'm';
 char data[100]= "Hello world" ;
 
 sercom master(mode, clk_pin, data_pin);
-
+// void x(){
+//   Serial.println("FALLING");
+// }
 void setup(){
+  
   Serial.begin(9600);
   master.set_clk(1000000);
   master.send(data);
   master.setSendData();
+  // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(10), x, FALLING);
   
 }
 void loop(){
+  // x = master.StateMachine;
+  // Serial.println(x);
+  // DDRB |= (1 << DDB1);
+  // PORTB |= (1 << PORTB1);
+  // delay(1000);
+  // PORTB &= ~(1 << PORTB1);
+  // delay(1000);
 
 }
