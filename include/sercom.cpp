@@ -57,6 +57,8 @@ sercom::sercom(char type, uint8_t clk_port, uint8_t data_port) {
             this->parity = 0;
             this->nextChar = 0;
             DDRB &= ~(1 << DDB1); 
+            this->startflag = 0;
+            this->dataflag = 0;
         }
     } else {
         Serial.println("Error: Wrong type of sercom");
@@ -77,12 +79,12 @@ void sercom::set_clk(long clk) {
         // So sánh thường( none-inverting)
         TCCR1A |= (1 << COM1B1);
         // xung răng cưa tràn sau 15 P_clock
-        // ICR1 = (uint8_t)((16000000/clk)-1);
-        ICR1 = 2*15624;
+        ICR1 = (uint8_t)((16000000/clk)-1);
+        // ICR1 = 2*15624;
         // Value=8 -> độ rộng 50 %
         OCR1B = ICR1/2;
         //chia 1
-        // TCCR1B |= (1 << CS10);
+        TCCR1B |= (1 << CS10);
         TCCR1B |= (1 << CS10)|(1 << CS12);
 
     }
@@ -103,15 +105,15 @@ void sercom::print() {
 
 //hàm xử lý ngắt cho việc truyền dữ liệu của master
 void sercom::Mcall() {
-    Serial.println("Mcall");
+    // Serial.println("Mcall");
     if(instancePtr->state==1){
-        Serial.print("State: ");
-        Serial.println(instancePtr->StateMachine);
+        // Serial.print("State: ");
+        // Serial.println(instancePtr->StateMachine);
         switch(instancePtr->StateMachine){
             case 0:
                 
-                Serial.print("countStart: ");
-                Serial.println(instancePtr->countStart);
+                // Serial.print("countStart: ");
+                // Serial.println(instancePtr->countStart);
                 if((instancePtr->isSending)&&(instancePtr->countStart <3)){
                     instancePtr->setStartToCLK();
                     
@@ -125,8 +127,8 @@ void sercom::Mcall() {
                 }            
                 break;
             case 1:
-                Serial.println("countStart ");
-                Serial.println(instancePtr->countStart);
+                // Serial.println("countStart ");
+                // Serial.println(instancePtr->countStart);
                 if((instancePtr->isSending)&&(instancePtr->countStart<=3)){
                     //wait data from slave to 3 posedge
                     if(instancePtr->countStart == 3){
@@ -156,8 +158,8 @@ void sercom::Mcall() {
                 }
                 break;
             case 2:
-                Serial.print("countStart ");
-                Serial.println(instancePtr->countStart);
+                // Serial.print("countStart ");
+                // Serial.println(instancePtr->countStart);
                 if(instancePtr->isSending){
 
                     //handle cho việc dịch chuyển từng kí tự
@@ -227,14 +229,14 @@ void sercom::Mcall() {
 
 //hàm xử lý ngắt cho việc nhận thông báo của slave
 void sercom::MRcall(){
-    Serial.println("MRcall");
+    // Serial.println("MRcall");
     if(instancePtr->state==1){
-        Serial.println(instancePtr->StateMachine);
+        // Serial.println(instancePtr->StateMachine);
         if((instancePtr->StateMachine==1)||(instancePtr->StateMachine==2)){
             if(instancePtr->isReceiving){
                 instancePtr->getMessFromSlave();
-                Serial.print("MESS: ");
-                Serial.println(instancePtr->MESS);
+                // Serial.print("MESS: ");
+                // Serial.println(instancePtr->MESS);
             }
             if (instancePtr->countStart==3){
                 if((instancePtr->MESS==0b100)||(instancePtr->MESS==0b111)){
@@ -281,8 +283,8 @@ void sercom::wait(){
     DDRB &= ~(1 << DDB1);
     PINB & (1 << PINB1);
     this->isReceiving = 1;
-    Serial.print("wait ");
-    Serial.println(this->isReceiving);
+    // Serial.print("wait ");
+    // Serial.println(this->isReceiving);
 
 }
 
@@ -293,7 +295,7 @@ void sercom::setSendData(){
         this->parity = 0;
         instancePtr = this;
         // if(this->isInterrupt){
-            Serial.println("Sending");
+            // Serial.println("Sending");
             // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(10), x, FALLING);
             // if(!this->itp2){
             //     attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(this->CLP), Mcall, FALLING);
@@ -341,10 +343,10 @@ void sercom::setStartToCLK(){
 
 void sercom::setDataToCLK(){
     if (this->state == 1) {
-        Serial.print("char id: ");
-        Serial.println(this->charId);
-        Serial.print("data id: ");
-        Serial.println(this->dataId);
+        // Serial.print("char id: ");
+        // Serial.println(this->charId);
+        // Serial.print("data id: ");
+        // Serial.println(this->dataId);
         DDRB |= (1 << DDB1);
         this->nextChar = 0;
 
@@ -418,9 +420,9 @@ void sercom::ResetDataToCLK(){
 
 void sercom::getMessFromSlave(){
     if(this->state==1){
-        Serial.println("get mess");
-        Serial.print("MESS0: ");
-        Serial.println(this->MESS);
+        // Serial.println("get mess");
+        // Serial.print("MESS0: ");
+        // Serial.println(this->MESS);
         volatile bool bitin ;
 
         DDRB &= ~(1 << DDB1); 
@@ -429,14 +431,14 @@ void sercom::getMessFromSlave(){
         Serial.print("shift: ");
         Serial.println(shift);
 
-        Serial.print("pin 9: ");
-        Serial.println(bitin);
+        // Serial.print("pin 9: ");
+        // Serial.println(bitin);
         this->MESS |= (bitin<<shift);
         // this->MESS |= (PINB & (1 << PINB1))<<shift; 
 
 
-        Serial.print("MESS1: ");
-        Serial.println(this->MESS);  
+        // Serial.print("MESS1: ");
+        // Serial.println(this->MESS);  
 
         // pinMode(9, INPUT);
         // uint8_t read_b = digitalRead(9);
@@ -467,29 +469,39 @@ void sercom::send(char *data){
 }
 
 void sercom::receiveStart(){
+    // Serial.println("receive start");
     //always wait for the start bit
-    if (this->state == 0) {        
+    if (this->state == 0) {   
+        // Serial.print("count start: ");
+        // Serial.println(this->countStart);     
         
         if (this->countStart<3){
 
             // DDRB |= (1 << DDB1);
-            // DDRB &= ~(1 << DDB1);
+            PORTB &= ~(1 << PORTB1);
+            DDRB &= ~(1 << DDB1);
+            volatile bool bitin = PINB & (1 << PINB1);
+            // Serial.print("pin 9: ");
+            // Serial.println(bitin);
 
-            this->START |= (PINB & (1 << PINB1))<<this->countStart;
-            this->countStart++;
+            this->countStart = bitin*(this->countStart+1);
+            // Serial.print("count start2: ");
+            // Serial.println(this->countStart);
 
             if (this->countStart==3){
 
+                
+
                 this->countStart = 0;
 
-                if (this->START==0b111){
+                // if (this->START==0b111){
                     this->isStarted = true;
                     this->isReceiving = false;
                     this->StateMachine = 1;
-                    this->START = 0;
                     this->isRecived = false;
-                    DDRB |= (1 << DDB1);
-                }
+                    this->startflag =1;
+                    // DDRB |= (1 << DDB1);
+                // }
             }
         }
 
@@ -502,20 +514,25 @@ void sercom::receiveStart(){
 
 
 void sercom::SSwait(){
+    // Serial.println("SSwait");
     if (this->state == 0){
+        // this->startflag = 1;
         if(this->countStart==0){
             this->datamemset();
         }
-        this->countStart++;
+        if (this->countStart<3){
+            this->countStart++;
+        }
         if (this->countStart==3){
-            countStart = 0;
+            // countStart = 0;
 
             if((this->isMemset)&&(this->isSended)){
                 this->StateMachine  = 2;
             }
             else this->StateMachine = 0; 
-            this->isReceiving = true; 
-            DDRB &= ~(1 << DDB1);          
+            // this->isReceiving = true; 
+            // PORTB &= ~(1 << PORTB1);
+            // DDRB &= ~(1 << DDB1);          
         }
     }
     else {
@@ -527,6 +544,8 @@ void sercom::SSwait(){
 void sercom::receiveData(){
     volatile bool dp;
     if (this->state == 0) {
+        PORTB &= ~(1 << PORTB1);
+        DDRB &= ~(1 << DDB1);
         dp = (PINB & (1 << PINB1));
         if (this->countStart<9){
             
@@ -542,22 +561,34 @@ void sercom::receiveData(){
                 }
             }
             else if (this->countStart==8){
+                
                 this->nextChar = dp;
+                // Serial.print("nextChar: ");
+                // Serial.println(this->nextChar);
                 if(!this->nextChar){
                     this->memory[this->dataId+1] = '\0';
                 }
             }
         }
         else if (this->countStart==9){
+            // Serial.print("parity: ");
+            // Serial.println(this->parity);
+
             this->isNoERROR =  !((!this->parity)^dp);
-                
+            // Serial.print("isNoERROR: ");
+            // Serial.println(this->isNoERROR);
+            // Serial.print("dataid: ");
+            
+            this->dataId = (this->isNoERROR)*(this->nextChar)*(this->dataId+1);
+            // Serial.println(this->dataId);    
         }
         this->countStart++;
         if (this->countStart>9){
             this->countStart = 0;
             this->StateMachine = 3;
             this->isReceiving = false;
-            DDRB |= (1 << DDB1);
+            this->dataflag = 1;
+            // DDRB |= (1 << DDB1);
         }
     }
     else {
@@ -571,21 +602,21 @@ void sercom::Swait(){
 
         this->countStart++;
         if (this->countStart==3){
-            this->countStart = 0;
 
             if ((this->isNoERROR) && (!this->nextChar) && (this->isSended)){
                 this->StateMachine = 0;
                 this->isStarted = 0;
                 this->isMemset = 0;
-                this->isRecived = 1;
+                // this->isRecived = 1;
             }
             else this->StateMachine = 2;
 
-            if((this->isNoERROR) && (this->nextChar)){
-                this->dataId++;
-            }
-            this->isReceiving = true;
-            DDRB &= ~(1 << DDB1); 
+            // if((this->isNoERROR) && (this->nextChar)){
+            //     this->dataId++;
+            // }
+            // this->isReceiving = true;
+            // PORTB &= ~(1 << PORTB1);
+            // DDRB &= ~(1 << DDB1); 
         }       
     }
     else {
@@ -596,7 +627,9 @@ void sercom::Swait(){
 
 //for posedge 
 void sercom::Scall_p(){
-    Serial.println("Scall_p");
+    // Serial.println("Scall_p");
+    // Serial.print("state: ");
+    // Serial.println(instancePtr->StateMachine);
     if (instancePtr->state == 0) {
         switch (instancePtr->StateMachine){
             //  wait for start bit(0b111), if started -> state = 1
@@ -642,13 +675,13 @@ void sercom::Scall_p(){
 }
 
 void sercom::Scall_n(){
-    Serial.println("Scall_n");
+    // Serial.println("Scall_n");
     if(instancePtr->state == 0){    
 
-        if (instancePtr->StateMachine == 1){
+        if (instancePtr->startflag){
             instancePtr->StartCallBack();
         }
-        else if (instancePtr->StateMachine == 3){
+        else if (instancePtr->dataflag){
             instancePtr->DataCallBack();
         }
     }
@@ -660,10 +693,28 @@ void sercom::Scall_n(){
 
 void sercom::StartCallBack(){
     if (this->state == 0) {
-        if((this->isMemset) && (!this->isReceiving)){
-            PORTB |= (1 << PORTB1);
+        // Serial.println("StartCallBack");
+        if(this->countStart < 3){
+            // Serial.print("countStart: ");
+            // Serial.println(this->countStart);
+
+            DDRB |= (1 << DDB1);
+            if((this->isMemset) && (!this->isReceiving)){
+                PORTB |= (1 << PORTB1);
+            }
+            else PORTB &= ~(1 << PORTB1);
+            if(this->countStart==2){
+                this->isSended = true;
+            }
         }
-        else PORTB &= ~(1 << PORTB1);
+        else if (this->countStart == 3){
+            this->startflag = 0;
+            this->countStart = 0;
+            // this->isSended = true;
+            this->isReceiving = true;
+            PORTB &= ~(1 << PORTB1);
+            DDRB &= ~(1 << DDB1); 
+        }
     }
     else{
         this->isInterrupt = false;
@@ -674,7 +725,8 @@ void sercom::StartCallBack(){
 void sercom::DataCallBack(){
     if (this->state == 0) {
         if(!this->isReceiving){
-            if(this->countStart == 0){
+            DDRB |= (1 << DDB1);
+            if(this->countStart == 2){
                 if(this->isNoERROR){
                     PORTB |= (1 << PORTB1);
                 }
@@ -687,11 +739,20 @@ void sercom::DataCallBack(){
                 }
                 else PORTB &= ~(1 << PORTB1);
             }
-            else if (this->countStart == 2){
+            else if (this->countStart == 0){
                 if (!(this->isNoERROR^(!this->parity))){
                     PORTB |= (1 << PORTB1);
                 }
                 else PORTB &= ~(1 << PORTB1);
+            }
+            else if(this->countStart == 3){
+                this->dataflag = 0;
+                this->countStart = 0;
+                this->isSended = true;
+                this->isReceiving = true;
+                this->parity = 0;
+                PORTB &= ~(1 << PORTB1);
+                DDRB &= ~(1 << DDB1); 
             }
         }
     }
@@ -701,12 +762,26 @@ void sercom::DataCallBack(){
     }
 }
 
+void sercom::ShandlleITR(){
+    volatile bool currCLK = PINB & (1 << PINB2);
+    // Serial.print("receive: ");
+    // Serial.println(instancePtr->isReceiving);
+    if((instancePtr->lastCLK&(!currCLK)) && (!instancePtr->isReceiving)){
+        
+        instancePtr->Scall_n();
+    }
+    else if((!instancePtr->lastCLK)&currCLK){
+        instancePtr->Scall_p();
+    }
+        
+    instancePtr->lastCLK = currCLK; 
+}
+
 void sercom::receive(){
     if (this->state == 0) {
         instancePtr = this;
         if(this->isInterrupt){
-            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(this->CLP), Scall_p, RISING);
-            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(this->CLP), Scall_n, FALLING);
+            attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(this->CLP), ShandlleITR, CHANGE);
             sei();
         }
     }

@@ -82,6 +82,10 @@ class sercom {
         void datamemset();
         void receive();
 
+        static void ShandlleITR();
+        volatile bool startflag, dataflag;
+
+
 
 };
 

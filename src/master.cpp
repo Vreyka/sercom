@@ -20,7 +20,7 @@ sercom master(mode, clk_pin, data_pin);
 void setup(){
   
   Serial.begin(9600);
-  master.set_clk(1000000);
+  master.set_clk(484848);
   master.send(data);
   master.setSendData();
   // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(10), x, FALLING);

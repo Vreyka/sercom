@@ -25,8 +25,9 @@ void setup(){
 void loop(){
   for(int i=0; i<100; i++){
     d[i] = slave.memory[i];
+    
   }
-  Serial.println(d);
+
   d2 = d;
   lcd.clear();                 // clear display
   lcd.setCursor(0, 0);         // move cursor to   (0, 0)
