@@ -18,7 +18,6 @@ void setup(){
   Serial.begin(9600);
   slave.receive();
   d2 = d;
-  // receive_word2 = String( slave.memory);
   lcd.init();
   lcd.backlight();
 }
@@ -32,7 +31,7 @@ void loop(){
   lcd.clear();                 // clear display
   lcd.setCursor(0, 0);         // move cursor to   (0, 0)
   lcd.print("Arduino");        // print message at (0, 0)
-  lcd.setCursor(2, 1);         // move cursor to   (2, 1)
+  lcd.setCursor(0, 1);         // move cursor to   (2, 1)
   lcd.print(d2); // print message at (2, 1)
   delay(2000);
 }

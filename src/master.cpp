@@ -9,30 +9,22 @@
 
 const uint8_t clk_pin = 10;
 const uint8_t data_pin = 9;
+#define bit_rate 400000
 
 char mode = 'm';
-char data[100]= "Hello world" ;
+char data[100]= "Hello World 2023" ;
 
 sercom master(mode, clk_pin, data_pin);
-// void x(){
-//   Serial.println("FALLING");
-// }
+
 void setup(){
   
   Serial.begin(9600);
-  master.set_clk(484848);
+  master.set_clk(bit_rate);
   master.send(data);
   master.setSendData();
-  // attachPinChangeInterrupt(digitalPinToPinChangeInterrupt(10), x, FALLING);
+  
   
 }
 void loop(){
-  // x = master.StateMachine;
-  // Serial.println(x);
-  // DDRB |= (1 << DDB1);
-  // PORTB |= (1 << PORTB1);
-  // delay(1000);
-  // PORTB &= ~(1 << PORTB1);
-  // delay(1000);
 
 }
